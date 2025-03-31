@@ -37,6 +37,7 @@ class Home extends StatelessWidget {
           children: [
             _headerSection(),
             _socialPost(),
+            
           ],
         ),
       ),
@@ -54,17 +55,31 @@ class Home extends StatelessWidget {
   Widget _headerSection() {
     return Container(
       width: double.infinity,
-      color: Colors.orange,
+      color: Colors.purple,
       height: 280,
       padding: EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-      backgroundImage: NetworkImage(
-      "https://img.favpng.com/13/19/24/globe-world-map-earth-png-favpng-5zGS0gkghPnnyWSc8sErgHCXd.jpg"),
-    ),
+          Align(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end ,
+
+                children: [
+                IconButton(onPressed: (){}, icon: Icon(Icons.add_a_photo_outlined,weight: 2,size: 35,color: Colors.white,)),
+                 SizedBox(width: 7,),
+                CircleAvatar(
+                
+                      backgroundImage: NetworkImage(
+                
+                      "https://img.favpng.com/13/19/24/globe-world-map-earth-png-favpng-5zGS0gkghPnnyWSc8sErgHCXd.jpg"),
+                    ),
+                
+              ]
+            ),
+            
+          ),
 
 
           Text(
@@ -114,6 +129,9 @@ class Home extends StatelessWidget {
               ),
             ],
           ),
+          SizedBox(height: 10),
+          Image.network("https://ramaarya.blog/wp-content/uploads/2017/12/tajmahal11.jpg"),
+          SizedBox(height: 10),
           SizedBox(height: 10),
           Text(
             "The Taj Mahal, a UNESCO World Heritage Site in Agra, India, is a stunning white marble mausoleum built by Mughal Emperor Shah Jahan in memory of his wife, Mumtaz Mahal.",
