@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/Addpost.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Storage for image upload
-import 'package:image_picker/image_picker.dart';  // Allows selecting images from gallery or camera
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert'; // For base64 decoding
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -10,53 +10,17 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            UserAccountsDrawerHeader(
-              accountName: Text("Traveler Name"),
-              accountEmail: Text("traveler@example.com"),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(
-                  Icons.person,
-                  size: 40.0,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            _drawerItem(Icons.home, "Home", () => Navigator.pop(context)),
-            _drawerItem(Icons.explore, "Explore Destinations", () {}),
-            _drawerItem(Icons.favorite, "Favorite Trips", () {}),
-            _drawerItem(Icons.book, "My Bookings", () {}),
-            _drawerItem(Icons.chat, "Community", () {}),
-            _drawerItem(Icons.settings, "Settings", () {}),
-            _drawerItem(Icons.exit_to_app, "Log Out", () {}),
-          ],
-        ),
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             _headerSection(context),
-            _socialPost(),
-            
+            _socialPostsFromFirestore(), // Changed to fetch data from Firestore
           ],
         ),
       ),
     );
   }
 
-  Widget _drawerItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      onTap: onTap,
-    );
-  }
-
- 
   Widget _headerSection(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -86,15 +50,14 @@ class Home extends StatelessWidget {
               ),
               SizedBox(width: 7),
               CircleAvatar(
-                radius: 20,//just size as needed
+                radius: 20,
                 backgroundImage: NetworkImage(
                   "https://img.favpng.com/13/19/24/globe-world-map-earth-png-favpng-5zGS0gkghPnnyWSc8sErgHCXd.jpg",
-
                 ),
               ),
             ],
           ),
-          SizedBox(height: 20), // Space after row
+          SizedBox(height: 20),
           Text(
             "Hi User",
             style: TextStyle(
@@ -117,7 +80,38 @@ class Home extends StatelessWidget {
     );
   }
 
-  Widget _socialPost() {
+  Widget _socialPostsFromFirestore() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('Posts').orderBy('timestamp', descending: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Something went wrong'));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
+          return Center(child: Text('No posts available.'));
+        }
+
+        return Column(
+          children: snapshot.data!.docs.map((DocumentSnapshot document) {
+            Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+            String username = data['username'] ?? 'Unknown User';
+            String caption = data['caption'] ?? 'No Caption';
+            String location = data['location'] ?? 'Unknown Location';
+            String base64Image = data['image'] ?? '';
+
+            return _socialPost(username, base64Image, caption, location);
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _socialPost(String username, String base64Image, String caption, String location) {
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.all(10),
@@ -138,17 +132,18 @@ class Home extends StatelessWidget {
               ),
               SizedBox(width: 10),
               Text(
-                "Prashant Kumar",
+                username, // Use username from Firestore
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           SizedBox(height: 10),
-          Image.network("https://ramaarya.blog/wp-content/uploads/2017/12/tajmahal11.jpg"),
-          SizedBox(height: 10),
+          base64Image.isNotEmpty
+              ? Image.memory(base64Decode(base64Image)) // Decode base64 and show image
+              : Container(), // Show nothing if no image
           SizedBox(height: 10),
           Text(
-            "The Taj Mahal, a UNESCO World Heritage Site in Agra, India, is a stunning white marble mausoleum built by Mughal Emperor Shah Jahan in memory of his wife, Mumtaz Mahal.",
+            caption, // Use caption from Firestore
             style: TextStyle(fontSize: 15, color: Colors.black),
             textAlign: TextAlign.justify,
           ),
@@ -158,7 +153,7 @@ class Home extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  "Amazing view of the Taj Mahal!",
+                  location, //Use location from firestore
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
