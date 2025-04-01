@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:untitled/Addpost.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Storage for image upload
+import 'package:image_picker/image_picker.dart';  // Allows selecting images from gallery or camera
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -35,7 +39,7 @@ class Home extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _headerSection(),
+            _headerSection(context),
             _socialPost(),
             
           ],
@@ -52,36 +56,45 @@ class Home extends StatelessWidget {
     );
   }
 
-  Widget _headerSection() {
+ 
+  Widget _headerSection(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.purple,
+      color: Colors.blue,
       height: 280,
       padding: EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Align(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end ,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Addpost()),
+                  );
+                },
+                icon: Icon(
+                  Icons.add_a_photo_outlined,
+                  weight: 2,
+                  size: 35,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 7),
+              CircleAvatar(
+                radius: 20,//just size as needed
+                backgroundImage: NetworkImage(
+                  "https://img.favpng.com/13/19/24/globe-world-map-earth-png-favpng-5zGS0gkghPnnyWSc8sErgHCXd.jpg",
 
-                children: [
-                IconButton(onPressed: (){}, icon: Icon(Icons.add_a_photo_outlined,weight: 2,size: 35,color: Colors.white,)),
-                 SizedBox(width: 7,),
-                CircleAvatar(
-                
-                      backgroundImage: NetworkImage(
-                
-                      "https://img.favpng.com/13/19/24/globe-world-map-earth-png-favpng-5zGS0gkghPnnyWSc8sErgHCXd.jpg"),
-                    ),
-                
-              ]
-            ),
-            
+                ),
+              ),
+            ],
           ),
-
-
+          SizedBox(height: 20), // Space after row
           Text(
             "Hi User",
             style: TextStyle(
@@ -93,9 +106,10 @@ class Home extends StatelessWidget {
           SizedBox(height: 10),
           Text(
             "Welcome to Travel Tour",
-            style: TextStyle(
-              fontSize: 20,
+            style: GoogleFonts.lato(
+              fontSize: 25,
               color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
