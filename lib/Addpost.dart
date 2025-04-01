@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';  // Firestore database
 import 'package:firebase_storage/firebase_storage.dart';  // Firebase Storage for image upload
 import 'package:image_picker/image_picker.dart';  // Allows selecting images from gallery or camera
@@ -17,43 +18,6 @@ class _AddpostState extends State<Addpost> {
 final TextEditingController username =TextEditingController();
 final TextEditingController location = TextEditingController();
 final TextEditingController caption = TextEditingController();
-Future<void> uploadData() async {
-  if(username.text.isEmpty ||location.text.isEmpty ||caption.text.isEmpty ){
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Please fill all fields",style: TextStyle(color: Colors.white),
-      ),
-      backgroundColor: Colors.red,
-      ),
-    );
-
-   return;
-  }
-  try {
-    await FirebaseFirestore.instance.collection("Posts").add({
-      "id" : DateTime.now().millisecondsSinceEpoch.toString(),
-    "username": username.text,
-    "location": location.text,
-      "caption": caption.text,
-      "timestamp": FieldValue.serverTimestamp(),
-
-
-    });
-    username.clear();
-    location.clear();
-    caption.clear();
-
-  } catch(e){
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("$e",style: TextStyle(color: Colors.white,)
-
-      ),
-      backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-
-}
 
 File? _image;
 final picker = ImagePicker();
@@ -65,6 +29,66 @@ Future<void> _imagePick () async{
     });
   }
 }
+
+
+Future<String> convertToBase64(File imageFile) async {
+  List<int> imageBytes = await imageFile.readAsBytes();
+  return base64Encode(imageBytes);
+}
+Future<void> uploadData() async {
+  if(username.text.isEmpty ||location.text.isEmpty ||caption.text.isEmpty ||_image==null){
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Please fill all fields",style: TextStyle(color: Colors.white),
+      ),
+        backgroundColor: Colors.red,
+      ),
+    );
+
+    return;
+  }
+  try {
+    String base64Image = await convertToBase64(_image!);
+
+    await FirebaseFirestore.instance.collection("Posts").add({
+      "id" : DateTime.now().millisecondsSinceEpoch.toString(),
+      "username": username.text,
+      "location": location.text,
+      "caption": caption.text,
+      "image": base64Image,
+      "timestamp": FieldValue.serverTimestamp(),
+
+
+    });
+    setState(() {
+      _image = null;
+    });
+    username.clear();
+    location.clear();
+    caption.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Data  Uploaded on App",style: TextStyle(color: Colors.white),
+      ),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+
+  } catch(e){
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("$e",style: TextStyle(color: Colors.white,)
+
+      ),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+
+}
+
+
+
+
 //   final XFile? pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
 //
 
